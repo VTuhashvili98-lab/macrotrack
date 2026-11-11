@@ -7,7 +7,9 @@ authors = [
     { name = "Valeriy Tuhashvili", email = "vtuhashvili98@mail.ru" }
 ]
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "sqlalchemy>=2.1.8",
+]
 
 [project.scripts]
 macrotrack = "macrotrack:main"
