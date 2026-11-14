@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from sqlalchemy import CheckConstraint, Numeric, String
+from sqlalchemy import CheckConstraint, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from macrotrack.models.base import Base
@@ -10,6 +10,7 @@ class Product(Base):
     __tablename__ = "products"
 
     __table_args__ = (
+        UniqueConstraint("name", name="uq_products_name"),
         CheckConstraint("calories >= 0", name="ck_products_calories_nonnegative"),
         CheckConstraint("protein >= 0", name="ck_products_protein_nonnegative"),
         CheckConstraint("fat >= 0", name="ck_products_fat_nonnegative"),
