@@ -1,6 +1,8 @@
 import os
+from collections.abc import Iterator
 
 from sqlalchemy import URL, create_engine
+from sqlalchemy.orm import Session, sessionmaker
 
 database_url = URL.create(
     drivername="postgresql+psycopg",
@@ -12,3 +14,13 @@ database_url = URL.create(
 )
 
 engine = create_engine(database_url)
+
+SessionFactory = sessionmaker(
+    bind=engine,
+    expire_on_commit=False,
+)
+
+
+def get_session() -> Iterator[Session]:
+    with SessionFactory() as session:
+        yield session
