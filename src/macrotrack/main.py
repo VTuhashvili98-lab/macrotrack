@@ -1,12 +1,14 @@
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy import select, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from macrotrack.auth import require_admin
 from macrotrack.database import get_session
 from macrotrack.models.product import Product
-from macrotrack.schemas.product import ProductRead
+from macrotrack.schemas.product import ProductCreate, ProductRead
 
 app = FastAPI()
 
@@ -38,5 +40,43 @@ def get_product(
             status_code=404,
             detail="Product not found",
         )
+
+    return product
+
+
+@app.post(
+    "/products",
+    response_model=ProductRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_admin)],
+)
+def create_product(
+    data: ProductCreate,
+    session: Annotated[Session, Depends(get_session)],
+) -> Product:
+    product = Product(**data.model_dump())
+
+    session.add(product)
+
+    try:
+        session.commit()
+    except IntegrityError as exc:
+        session.rollback()
+
+        constraint_name = getattr(
+            getattr(exc.orig, "diag", None),
+            "constraint_name",
+            None,
+        )
+
+        if constraint_name == "uq_products_name":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Product name already exists",
+            ) from exc
+
+        raise
+
+    session.refresh(product)
 
     return product
