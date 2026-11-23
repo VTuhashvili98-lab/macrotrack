@@ -127,3 +127,24 @@ def update_product(
     session.refresh(product)
 
     return product
+
+
+@app.delete(
+    "/products/{product_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_admin)],
+)
+def delete_product(
+    product_id: int,
+    session: Annotated[Session, Depends(get_session)],
+) -> None:
+    product = session.get(Product, product_id)
+
+    if product is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not found",
+        )
+
+    session.delete(product)
+    session.commit()
