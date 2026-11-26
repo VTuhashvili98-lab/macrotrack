@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Path, status
 from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -9,6 +9,8 @@ from macrotrack.auth import require_admin
 from macrotrack.database import get_session
 from macrotrack.models.product import Product
 from macrotrack.schemas.product import ProductCreate, ProductRead, ProductUpdate
+
+ProductId = Annotated[int, Path(ge=1, le=2_124_483_647)]
 
 app = FastAPI()
 
@@ -30,7 +32,7 @@ def get_products(
 
 @app.get("/products/{product_id}", response_model=ProductRead)
 def get_product(
-    product_id: int,
+    product_id: ProductId,
     session: Annotated[Session, Depends(get_session)],
 ) -> Product:
     product = session.get(Product, product_id)
@@ -88,7 +90,7 @@ def create_product(
     dependencies=[Depends(require_admin)],
 )
 def update_product(
-    product_id: int,
+    product_id: ProductId,
     data: ProductUpdate,
     session: Annotated[Session, Depends(get_session)],
 ) -> Product:
@@ -135,7 +137,7 @@ def update_product(
     dependencies=[Depends(require_admin)],
 )
 def delete_product(
-    product_id: int,
+    product_id: ProductId,
     session: Annotated[Session, Depends(get_session)],
 ) -> None:
     product = session.get(Product, product_id)

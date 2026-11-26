@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 
 
 def test_delete_product_requires_admin(client: TestClient) -> None:
-    response = client.delete("/products/999999")
+    response = client.delete("/products/1")
 
     assert response.status_code == 401
     assert response.json() == {"detail": "Invalid administrator credentials"}
@@ -26,7 +26,7 @@ def test_create_product_requires_admin(client: TestClient) -> None:
 
 def test_update_product_requires_admin(client: TestClient) -> None:
     response = client.patch(
-        "/products/999",
+        "/products/1",
         json={"name": "Updated Milk"},
     )
 
@@ -42,7 +42,19 @@ def test_get_products(client: TestClient) -> None:
 
 
 def test_get_nonexist_product(client: TestClient) -> None:
-    response = client.get("products/0")
+    response = client.get("products/1")
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Product not found"}
+
+
+def test_get_product_invalid_id(client: TestClient) -> None:
+    response = client.get("/products/-1")
+
+    assert response.status_code == 422
+
+
+def test_get_product_id_out_of_range(client: TestClient) -> None:
+    response = client.get("/products/99999999999")
+
+    assert response.status_code == 422
